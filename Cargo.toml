@@ -1,0 +1,23 @@
+[package]
+name = "chronicle"
+version = "0.0.0"
+edition = "2021"
+authors = ["Julian Eager <eagr@tutanota.com>"]
+description = "CLI tool for logging timestamped events"
+license = "MIT OR Apache-2.0"
+categories = ["command-line-utilities"]
+keywords = ["cli", "logging", "timestamped"]
+readme = "README.md"
+repository = "https://github.com/eagr/chronicle"
+
+[lib]
+name = "pre"
+path = "src/pre/lib.rs"
+
+[dependencies]
+anyhow = "1.0"
+chrono = "0.4"
+clap = { version = "3.2.8", features = ["cargo", "derive"] }
+home = "0.5"
+serde = { version = "1.0", features = ["derive"] }
+toml = "0.5"
