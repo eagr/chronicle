@@ -17,7 +17,7 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
         panic!("no chronicle named {chron_name}");
     }
 
-    let draft_path = home().join(chron_name);
+    let draft_path = config::home().join(chron_name);
 
     let c = cfg.chronicle.get(chron_name).unwrap();
     let date_fmt = if c.date.is_empty() { cfg.date.to_string() } else { c.date.to_string() };
@@ -32,5 +32,5 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
     let now = Local::now().format(&fmt).to_string();
     let line = now + " " + event;
 
-    append_line(&draft_path, &line);
+    append(&draft_path, &line);
 }

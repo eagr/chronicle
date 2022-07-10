@@ -1,19 +1,17 @@
 pub mod config;
 
+pub use clap::arg;
+pub use clap::{AppSettings, Arg, ArgAction, ArgMatches, Command};
+
 use std::fs::{OpenOptions};
 use std::io::{Write};
 use std::path::PathBuf;
 
-pub use clap::AppSettings;
-pub use clap::Arg;
-pub use clap::ArgAction;
-pub use clap::ArgMatches;
-pub use clap::Command;
-pub use clap::arg;
-pub use clap::crate_version;
-pub type Cli = clap::Command<'static>;
+pub use config::{Config, ChronicleConfig};
 
-pub use config::{Config, ChronicleConfig, home};
+pub type Cli = clap::Command<'static>;
+pub type CliErr = anyhow::Error;
+pub type CliRes = Result<(), CliErr>;
 
 pub fn cmd(name: &'static str) -> Cli {
     Cli::new(name)
@@ -21,7 +19,7 @@ pub fn cmd(name: &'static str) -> Cli {
         .setting(AppSettings::DeriveDisplayOrder)
 }
 
-pub fn append_line(path: &PathBuf, line: &String) {
+pub fn append(path: &PathBuf, line: &String) {
     let mut fd = OpenOptions::new()
         .create(true)
         .append(true)
