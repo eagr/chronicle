@@ -22,13 +22,7 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
     let c = cfg.chronicle.get(chron_name).unwrap();
     let date_fmt = if c.date.is_empty() { cfg.date.to_string() } else { c.date.to_string() };
     let time_fmt = if c.time.is_empty() { cfg.time.to_string() } else { c.time.to_string() };
-    let fmt = if date_fmt.is_empty() {
-        time_fmt
-    } else if time_fmt.is_empty() {
-        date_fmt
-    } else {
-        format!("{date_fmt} {time_fmt}")
-    };
+    let fmt = format!("{date_fmt} {time_fmt}");
     let now = Local::now().format(&fmt).to_string();
     let line = now + " " + event;
 
