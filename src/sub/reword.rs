@@ -13,7 +13,7 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
     if cfg.editor.is_empty() { panic!("") }
     if !cfg.exists(chron_name) { panic!("") }
 
-    let draft_path = config::home().join(chron_name);
+    let draft_path = chron_dir().join(chron_name);
     std::process::Command::new(&cfg.editor)
         .arg(draft_path)
         .spawn()

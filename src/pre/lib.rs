@@ -8,6 +8,7 @@ use std::io::{Write};
 use std::path::PathBuf;
 
 pub use config::{Config, ChronicleConfig};
+pub use config::{chron_dir, chron_backup_dir, chron_config_path};
 
 pub type Cli = clap::Command<'static>;
 pub type CliErr = anyhow::Error;

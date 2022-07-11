@@ -3,32 +3,15 @@ use serde::{Serialize, Deserialize};
 use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
-use std::path::{PathBuf};
+use std::path::PathBuf;
 
-#[derive(Serialize, Deserialize, Debug)]
-pub struct Config {
-    #[serde(default)]
-    pub default: String,
-    #[serde(default = "def_date")]
-    pub date: String,
-    #[serde(default = "def_time")]
-    pub time: String,
-    #[serde(default)]
-    pub editor: String,
-    pub chronicle: HashMap<String, ChronicleConfig>,
-}
-
-impl Config {
-    pub fn exists(self: &Self, name: &String) -> bool {
-        self.chronicle.contains_key(name)
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize)]
 pub struct ChronicleConfig {
     pub storage: String,
+
     #[serde(default)]
     pub date: String,
+
     #[serde(default)]
     pub time: String,
 }
@@ -44,14 +27,46 @@ impl ChronicleConfig {
 }
 
 fn def_date() -> String { String::from("%Y-%m-%d") }
+
 fn def_time() -> String { String::from("%H:%M") }
 
-pub fn home() -> PathBuf {
-    home::home_dir().unwrap().join(".chronicle")
+#[derive(Serialize, Deserialize)]
+pub struct Config {
+    #[serde(default)]
+    pub default: String,
+
+    #[serde(default = "def_date")]
+    pub date: String,
+
+    #[serde(default = "def_time")]
+    pub time: String,
+
+    #[serde(default)]
+    pub editor: String,
+
+    pub chronicle: HashMap<String, ChronicleConfig>,
+}
+
+impl Config {
+    pub fn exists(self: &Self, name: &String) -> bool {
+        self.chronicle.contains_key(name)
+    }
+}
+
+pub fn chron_dir() -> PathBuf {
+    home::home_dir().unwrap().join("./chronicle")
+}
+
+pub fn chron_backup_dir() -> PathBuf {
+    chron_dir().join("backup~")
+}
+
+pub fn chron_config_path() -> PathBuf {
+    chron_dir().join("config.toml")
 }
 
 pub fn read() -> Config {
-    let p = cfg_path();
+    let p = chron_config_path();
     let mut fd = File::open(&p).unwrap_or_else(|err| {
         match err.kind() {
             io::ErrorKind::NotFound => {
@@ -70,24 +85,16 @@ pub fn read() -> Config {
 }
 
 pub fn write(cfg: &mut Config) {
-    let p = cfg_path();
+    let p = chron_config_path();
     let b = toml::to_vec(cfg).unwrap();
     fs::write(p, b).unwrap();
 }
 
-fn cfg_path() -> PathBuf {
-    cfg_home().join("config.toml")
-}
-
-fn cfg_home() -> PathBuf {
-    home::home_dir().unwrap().join(".chronicle")
-}
-
 fn cfg_init() {
-    let ch = cfg_home();
-    fs::create_dir_all(&ch).expect("failed to create config dir");
-    let cp = ch.join("config.toml");
-    let mut fd = File::create(&cp).expect("failed to create config.toml");
+    let dir = chron_dir();
+    fs::create_dir_all(&dir).expect("failed to create config dir");
+    let p = chron_config_path();
+    let mut fd = File::create(&p).expect("failed to create config.toml");
 
     let c = Config {
         default: String::new(),

@@ -11,7 +11,7 @@ pub fn build() -> Cli {
 pub fn proc(cfg: &mut Config, args: &ArgMatches) {
     let chron_name = args.get_one::<String>("chron_name").unwrap();
 
-    let draft_path = config::home().join(chron_name);
+    let draft_path = chron_dir().join(chron_name);
     let draft_cont = match fs::read_to_string(&draft_path) {
         Ok(cont) => cont,
         Err(_) => String::new(),
@@ -19,7 +19,7 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
 
     if draft_cont.is_empty() { return; }
 
-    let backup_dir = config::home().join("erased~");
+    let backup_dir = chron_backup_dir();
     fs::create_dir_all(&backup_dir).unwrap();
     let backup_file = backup_dir.join(chron_name);
     fs::write(&backup_file, &draft_cont).unwrap();

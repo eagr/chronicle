@@ -24,7 +24,7 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
         panic!("");
     }
 
-    let chron_home = config::home();
+    let chron_home = chron_dir();
     let draft_path = chron_home.join(chron_name);
     let map = parse(&draft_path);
     let mut new_cont = String::new();
