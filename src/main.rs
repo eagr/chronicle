@@ -4,6 +4,10 @@ mod sub;
 // TODO logging
 // TODO exit code
 fn main() {
-    let mut cfg = pre::config::read();
-    let res = cli::exec(&mut cfg);
+    match pre::read_config() {
+        Ok(mut cfg) => {
+            cli::exec(&mut cfg);
+        },
+        Err(e) => eprintln!("{}", e),
+    }
 }

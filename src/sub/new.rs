@@ -17,5 +17,5 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
 
     cfg.chronicle.insert(chron_name.to_string(), ChronicleConfig::new(storage));
 
-    config::write(cfg)
+    write_config(cfg);
 }

@@ -23,5 +23,5 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) {
         cfg.time = time_fmt.to_string();
     }
 
-    config::write(cfg);
+    write_config(cfg);
 }

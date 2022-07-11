@@ -1,3 +1,4 @@
+use anyhow::{Result, bail};
 use serde::{Serialize, Deserialize};
 
 use std::collections::HashMap;
@@ -7,6 +8,7 @@ use std::path::PathBuf;
 
 #[derive(Serialize, Deserialize)]
 pub struct ChronicleConfig {
+    #[serde(default)]
     pub storage: String,
 
     #[serde(default)]
@@ -19,7 +21,7 @@ pub struct ChronicleConfig {
 impl ChronicleConfig {
     pub fn new(storage: &String) -> Self {
         Self {
-            storage: storage.to_string(),
+            storage: storage.to_owned(),
             date: String::new(),
             time: String::new(),
         }
@@ -48,13 +50,23 @@ pub struct Config {
 }
 
 impl Config {
+    pub fn new() -> Self {
+        Self {
+            default: String::new(),
+            date: def_date(),
+            time: def_time(),
+            editor: String::new(),
+            chronicle: HashMap::new(),
+        }
+    }
+
     pub fn exists(self: &Self, name: &String) -> bool {
         self.chronicle.contains_key(name)
     }
 }
 
 pub fn chron_dir() -> PathBuf {
-    home::home_dir().unwrap().join("./chronicle")
+    home::home_dir().unwrap().join(".chronicle")
 }
 
 pub fn chron_backup_dir() -> PathBuf {
@@ -65,44 +77,49 @@ pub fn chron_config_path() -> PathBuf {
     chron_dir().join("config.toml")
 }
 
-pub fn read() -> Config {
+fn init_config() -> Result<()> {
+    let d = chron_dir();
+    fs::create_dir_all(&d)?;
     let p = chron_config_path();
-    let mut fd = File::open(&p).unwrap_or_else(|err| {
+    let mut f = File::create(&p)?;
+
+    let c = Config::new();
+    let b = toml::to_vec(&c)?;
+    f.write_all(&b)?;
+    Ok(())
+}
+
+pub fn read_config() -> Result<Config> {
+    let p = chron_config_path();
+    let f = File::open(&p).or_else(|err| {
         match err.kind() {
             io::ErrorKind::NotFound => {
-                cfg_init();
-                File::open(&p).unwrap()
+                init_config().and_then(|()| {
+                    File::open(&p)
+                        .map(|f| f)
+                        .map_err(|e| e.into())
+                })
             },
-            _ => panic!("failed to open config.toml: {err:?}"),
+            _ => Err(anyhow::Error::from(err))
         }
     });
 
+    if let Err(e) = f {
+        bail!(e);
+    }
+
+    let mut f = f.unwrap();
     let mut s = String::new();
-    fd.read_to_string(&mut s).expect("failed to read config.toml");
+    f.read_to_string(&mut s)?;
 
-    let c: Config = toml::from_str(&s).unwrap();
-    c
+    toml::from_str(&s)
+        .map(|c| c)
+        .map_err(|e| e.into())
 }
 
-pub fn write(cfg: &mut Config) {
+pub fn write_config(cfg: &mut Config) -> Result<()> {
     let p = chron_config_path();
-    let b = toml::to_vec(cfg).unwrap();
-    fs::write(p, b).unwrap();
-}
-
-fn cfg_init() {
-    let dir = chron_dir();
-    fs::create_dir_all(&dir).expect("failed to create config dir");
-    let p = chron_config_path();
-    let mut fd = File::create(&p).expect("failed to create config.toml");
-
-    let c = Config {
-        default: String::new(),
-        date: def_date(),
-        time: def_time(),
-        editor: String::new(),
-        chronicle: HashMap::new(),
-    };
-    let b = toml::to_vec(&c).unwrap();
-    fd.write_all(&b).unwrap();
+    let b = toml::to_vec(cfg)?;
+    fs::write(&p, &b)?;
+    Ok(())
 }
