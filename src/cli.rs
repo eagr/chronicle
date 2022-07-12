@@ -2,27 +2,28 @@ use pre::*;
 
 use crate::sub;
 
-pub fn exec(cfg: &mut Config) -> std::io::Result<()> {
-    let matches = build(cfg).get_matches();
-    let (cmd, args) = match matches.subcommand() {
+pub fn exec(cfg: &mut Config) -> CliRes {
+    let mut m = build().get_matches();
+    let (cmd, args) = match m.subcommand() {
         Some((cmd, args)) => (cmd, args),
-        _ => panic!(""),
+        _ => {
+            m = build().get_matches_from(vec!["chron", "help"]);
+            m.subcommand().unwrap()
+        },
     };
 
-    try_exec_sub(cfg, cmd, args);
+    exec_sub(cfg, cmd, args);
     Ok(())
 }
 
-fn build(cfg: &mut Config) -> Cli {
-    let mut cli = Command::new("chron")
+fn build() -> Cli {
+    Command::new("chron")
         .version(clap::crate_version!())
         .setting(AppSettings::DeriveDisplayOrder)
-        .subcommands(sub::commands());
-
-    cli
+        .subcommands(sub::commands())
 }
 
-fn try_exec_sub(cfg: &mut Config, cmd: &str, args: &ArgMatches) {
+fn exec_sub(cfg: &mut Config, cmd: &str, args: &ArgMatches) {
     if let Some(proc) = sub::find_proc(cmd) {
         return proc(cfg, args);
     }
