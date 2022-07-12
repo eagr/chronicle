@@ -14,7 +14,7 @@ pub fn exec(cfg: &mut Config) -> std::io::Result<()> {
 }
 
 fn build(cfg: &mut Config) -> Cli {
-    let mut cli = Command::new("chronicle")
+    let mut cli = Command::new("chron")
         .version(clap::crate_version!())
         .setting(AppSettings::DeriveDisplayOrder)
         .subcommands(sub::commands());

@@ -1,6 +1,6 @@
 # chronicle
 
-create your chronicle from command-line
+write your chronicle from command-line
 
 ## Install
 
@@ -12,7 +12,7 @@ cargo install chronicle
 ## Usage
 
 ```sh
-chronicle help
+chron help
 ```
 
 ## License

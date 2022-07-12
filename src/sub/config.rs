@@ -2,7 +2,7 @@ use pre::*;
 
 pub fn build() -> Cli {
     cmd("config")
-        .about("configure chronicle")
+        .about("configure chron")
         .args(&[
             arg!(--editor <EDITOR_BIN> "set default editor for rewording"),
             arg!(--date <DATE_FORMAT> "set date format"),

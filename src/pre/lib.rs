@@ -1,5 +1,6 @@
 pub mod config;
 
+pub use anyhow::{Error};
 pub use clap::arg;
 pub use clap::{AppSettings, Arg, ArgAction, ArgMatches, Command};
 
@@ -12,7 +13,7 @@ pub use config::{chron_dir, chron_backup_dir, chron_config_path};
 pub use config::{read_config, write_config};
 
 pub type Cli = clap::Command<'static>;
-pub type CliErr = anyhow::Error;
+pub type CliErr = Error;
 pub type CliRes = Result<(), CliErr>;
 
 pub fn cmd(name: &'static str) -> Cli {
