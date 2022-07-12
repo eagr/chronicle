@@ -18,7 +18,7 @@ pub fn commands() -> Vec<Cli> {
     ]
 }
 
-pub fn find_proc(cmd: &str) -> Option<fn(&mut Config, &ArgMatches)> {
+pub fn find_proc(cmd: &str) -> Option<fn(&mut Config, &ArgMatches) -> CliRes> {
     let proc = match cmd {
         "new" => new::proc,
         "config" => config::proc,

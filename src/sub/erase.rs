@@ -1,27 +1,28 @@
 use pre::*;
 
-use std::fs;
+use std::fs::{self, OpenOptions};
+use std::io;
 
 pub fn build() -> Cli {
-    Command::new("erase")
+    cmd("erase")
         .about("wipe off draft buffer")
-        .arg(Arg::new("chron_name").required(true))
+        .arg(Arg::new("name").required(true))
 }
 
-pub fn proc(cfg: &mut Config, args: &ArgMatches) {
-    let chron_name = args.get_one::<String>("chron_name").unwrap();
+pub fn proc(_: &mut Config, args: &ArgMatches) -> CliRes {
+    let name = try_get_arg(args, "name")?;
 
-    let draft_path = chron_dir().join(chron_name);
-    let draft_cont = match fs::read_to_string(&draft_path) {
-        Ok(cont) => cont,
-        Err(_) => String::new(),
-    };
+    let bd = backup_dir();
+    fs::create_dir_all(&bd)?;
 
-    if draft_cont.is_empty() { return; }
+    let dp = draft_path(name);
+    let mut draft = OpenOptions::new().create(true).read(true).write(true).open(&dp)?;
 
-    let backup_dir = chron_backup_dir();
-    fs::create_dir_all(&backup_dir).unwrap();
-    let backup_file = backup_dir.join(chron_name);
-    fs::write(&backup_file, &draft_cont).unwrap();
-    fs::write(&draft_path, "").unwrap();
+    let bp = bd.join(name);
+    let mut backup = OpenOptions::new().create(true).append(true).open(&bp)?;
+
+    io::copy(&mut draft, &mut backup)?;
+    draft.set_len(0)?;
+
+    Ok(())
 }

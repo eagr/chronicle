@@ -2,20 +2,19 @@ use pre::*;
 
 pub fn build() -> Cli {
     cmd("new")
-        .about("create a new chronicle")
-        .arg(Arg::new("chron_name").required(true))
+        .about("create new chronicle")
+        .arg(Arg::new("name").required(true))
         .arg(Arg::new("storage").required(true))
 }
 
-pub fn proc(cfg: &mut Config, args: &ArgMatches) {
-    let chron_name = args.get_one::<String>("chron_name").unwrap();
-    let storage = args.get_one::<String>("storage").unwrap();
+pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
+    let name = try_get_arg(args, "name")?;
+    let storage = try_get_arg(args, "storage")?;
 
-    if cfg.chronicle.contains_key(chron_name) {
-        panic!("{chron_name} already exits");
+    if cfg.chronicle.contains_key(name) {
+        bail!("chronicle {name} already exits");
     }
 
-    cfg.chronicle.insert(chron_name.to_string(), ChronicleConfig::new(storage));
-
-    write_config(cfg);
+    cfg.chronicle.insert(name.to_owned(), ChronicleConfig::new(storage));
+    write_config(cfg)
 }

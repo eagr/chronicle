@@ -1,6 +1,6 @@
 pub mod config;
 
-pub use anyhow::{Error};
+pub use anyhow::{Context, Error, anyhow, bail};
 pub use clap::arg;
 pub use clap::{AppSettings, Arg, ArgAction, ArgMatches, Command};
 
@@ -9,7 +9,7 @@ use std::io::{Write};
 use std::path::PathBuf;
 
 pub use config::{Config, ChronicleConfig};
-pub use config::{chron_dir, chron_backup_dir, chron_config_path};
+pub use config::{dir, backup_dir, config_path, draft_path};
 pub use config::{read_config, write_config};
 
 pub type Cli = clap::Command<'static>;
@@ -22,13 +22,18 @@ pub fn cmd(name: &'static str) -> Cli {
         .setting(AppSettings::DeriveDisplayOrder)
 }
 
-pub fn append(path: &PathBuf, line: &String) {
+pub fn try_get_arg<'a>(args: &'a ArgMatches, name: &str) -> anyhow::Result<&'a String> {
+    args.get_one::<String>(name)
+        .ok_or_else(|| anyhow!("could not get arg `{name}`"))
+}
+
+pub fn append(path: &PathBuf, line: &String) -> CliRes {
     let mut fd = OpenOptions::new()
         .create(true)
         .append(true)
-        .open(path)
-        .unwrap();
+        .open(path)?;
 
     let ln = line.to_owned() + "\n";
-    fd.write(ln.as_bytes());
+    fd.write_all(ln.as_bytes())?;
+    Ok(())
 }

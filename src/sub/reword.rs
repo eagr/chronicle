@@ -1,23 +1,28 @@
 use pre::*;
 
 pub fn build() -> Cli {
-    Command::new("reword")
+    cmd("reword")
         .about("reword draft")
-        .arg(Arg::new("chron_name").required(true))
+        .arg(Arg::new("name").required(true))
 }
 
-pub fn proc(cfg: &mut Config, args: &ArgMatches) {
-    let chron_name = args.get_one::<String>("chron_name").unwrap();
+pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
+    let name = try_get_arg(args, "name")?;
 
     // TODO msg: `chron config --editor <EDITOR_BIN>`
-    if cfg.editor.is_empty() { panic!("") }
-    if !cfg.exists(chron_name) { panic!("") }
+    if cfg.editor.is_empty() {
+        bail!("editor not set");
+    }
 
-    let draft_path = chron_dir().join(chron_name);
+    if !cfg.exists(name) {
+        bail!("no chronicle named '{name}'");
+    }
+
+    let path = draft_path(name);
     std::process::Command::new(&cfg.editor)
-        .arg(draft_path)
-        .spawn()
-        .expect("failed to launch vim")
-        .wait()
-        .expect("editor exited with with non-zero code");
+        .arg(path)
+        .spawn()?
+        .wait()?;
+
+    Ok(())
 }

@@ -1,79 +1,96 @@
 use pre::*;
 
+use anyhow::{Result};
+
 use std::collections::BTreeMap;
 use std::fs::File;
-use std::io::{self, BufRead, Write};
+use std::io::{self, BufRead, BufReader, Lines, Write};
 use std::path::Path;
 
+// TODO --prepend / --append
 pub fn build() -> Cli {
-    Command::new("ink")
-        .about("ink logs onto chronicle")
-        .arg(Arg::new("chron_name").required(true))
+    cmd("ink")
+        .about("ink onto chronicle")
+        .arg(Arg::new("name").required(true))
 }
 
-pub fn proc(cfg: &mut Config, args: &ArgMatches) {
-    let chron_name = args.get_one::<String>("chron_name").unwrap();
+pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
+    let name = try_get_arg(args, "name")?;
 
-    if !cfg.exists(chron_name) {
-        panic!("");
+    if !cfg.exists(name) {
+        bail!("no chronicle named '{name}'");
     }
 
-    let storage = &cfg.chronicle.get(chron_name).unwrap().storage;
+    let storage = &cfg.chronicle
+        .get(name)
+        .context(format!("failed to read config of '{name}'"))?
+        .storage;
 
     if storage.is_empty() {
-        panic!("");
+        bail!("'{name}' storage not set");
     }
 
-    let chron_home = chron_dir();
-    let draft_path = chron_home.join(chron_name);
-    let map = parse(&draft_path);
-    let mut new_cont = String::new();
+    let chron_dir = dir();
+    let draft_path = draft_path(name);
+    let map = parse(&draft_path)?;
+
+    let mut new_ink = String::new();
     for (date, events) in &map {
-        new_cont.push_str(&format!("## {date}\n\n"));
+        let mut day = String::new();
+        day.push_str(&format!("## {date}\n\n"));
         for ev in events {
-            new_cont.push_str(&format!("- {ev}\n"));
+            day.push_str(&format!("- {ev}\n"));
         }
-        new_cont.push_str(&"\n");
+        day.push_str("\n");
+
+        new_ink = day + &new_ink;
     }
 
-    let mut tmp = tempfile::NamedTempFile::new_in(chron_home).unwrap();
-    tmp.write(new_cont.as_bytes()).unwrap();
+    // steps to prepend new ink
+    // 0. create tmp file in the same dir as storage file
+    // 1. write new content to tmp file
+    // 2. append entire storage state to tmp file
+    // 3. rename tmp file to the same name as storage file
+    let mut tmp = tempfile::NamedTempFile::new_in(chron_dir)?;
+    tmp.write(new_ink.as_bytes())?;
+    let mut store = File::open(storage)?;
+    io::copy(&mut store, &mut tmp)?;
+    tmp.persist(storage)?;
 
-    let mut src = File::open(storage).unwrap();
-    io::copy(&mut src, &mut tmp).unwrap();
-    tmp.persist(storage).unwrap();
-
-    File::create(&draft_path).unwrap();
+    // wife off draft
+    File::create(&draft_path)?;
+    Ok(())
 }
 
-fn parse<P>(path: P) -> BTreeMap<String, Vec<String>>
+fn parse<P>(path: P) -> Result<BTreeMap<String, Vec<String>>>
 where P: AsRef<Path>,
 {
+    let lines = read_lines(&path)?;
     let mut map: BTreeMap<String, Vec<String>> = BTreeMap::new();
 
-    let lines = read_lines(&path);
     for line in lines {
-        let mut dv: &mut Vec<String> = &mut Vec::new();
         if let Ok(ln) = line {
-            let (date, rest) = ln.split_once(' ').unwrap();
-            let date = date.to_string();
-            let rest = rest.to_string();
-            if map.contains_key(&date) {
-                dv = map.get_mut(&date).unwrap();
-                dv.push(rest);
+            let (date, event) = ln.split_once(' ').context("failed to split line")?;
+            let event = event.to_string();
+
+            if let Some(events) = map.get_mut(date) {
+                events.push(event);
             } else {
-                map.insert(date, vec![rest]);
+                map.insert(date.to_string(), vec![event]);
             }
         }
-        dv.sort();
     }
 
-    map
+    for (_, events) in &mut map {
+        events.sort();
+    }
+
+    Ok(map)
 }
 
-fn read_lines<P>(path: P) -> io::Lines<io::BufReader<File>>
+fn read_lines<P>(path: P) -> Result<Lines<BufReader<File>>>
 where P: AsRef<Path>,
 {
-    let fd = File::open(path).unwrap();
-    io::BufReader::new(fd).lines()
+    let fd = File::open(path)?;
+    Ok(BufReader::new(fd).lines())
 }

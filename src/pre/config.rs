@@ -65,22 +65,26 @@ impl Config {
     }
 }
 
-pub fn chron_dir() -> PathBuf {
+pub fn dir() -> PathBuf {
     home::home_dir().unwrap().join(".chronicle")
 }
 
-pub fn chron_backup_dir() -> PathBuf {
-    chron_dir().join("backup~")
+pub fn backup_dir() -> PathBuf {
+    dir().join("backup~")
 }
 
-pub fn chron_config_path() -> PathBuf {
-    chron_dir().join("config.toml")
+pub fn config_path() -> PathBuf {
+    dir().join("config.toml")
+}
+
+pub fn draft_path(name: &String) -> PathBuf {
+    dir().join(name)
 }
 
 fn init_config() -> Result<()> {
-    let d = chron_dir();
+    let d = dir();
     fs::create_dir_all(&d)?;
-    let p = chron_config_path();
+    let p = config_path();
     let mut f = File::create(&p)?;
 
     let c = Config::new();
@@ -90,7 +94,7 @@ fn init_config() -> Result<()> {
 }
 
 pub fn read_config() -> Result<Config> {
-    let p = chron_config_path();
+    let p = config_path();
     let f = File::open(&p).or_else(|err| {
         match err.kind() {
             io::ErrorKind::NotFound => {
@@ -108,7 +112,7 @@ pub fn read_config() -> Result<Config> {
         bail!(e);
     }
 
-    let mut f = f.unwrap();
+    let mut f = f?;
     let mut s = String::new();
     f.read_to_string(&mut s)?;
 
@@ -118,7 +122,7 @@ pub fn read_config() -> Result<Config> {
 }
 
 pub fn write_config(cfg: &mut Config) -> Result<()> {
-    let p = chron_config_path();
+    let p = config_path();
     let b = toml::to_vec(cfg)?;
     fs::write(&p, &b)?;
     Ok(())

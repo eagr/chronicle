@@ -8,11 +8,11 @@ pub fn exec(cfg: &mut Config) -> CliRes {
         Some((cmd, args)) => (cmd, args),
         _ => {
             m = build().get_matches_from(vec!["chron", "help"]);
-            m.subcommand().unwrap()
+            m.subcommand().context("could not parse subcommand")?
         },
     };
 
-    exec_sub(cfg, cmd, args);
+    exec_sub(cfg, cmd, args)?;
     Ok(())
 }
 
@@ -23,8 +23,9 @@ fn build() -> Cli {
         .subcommands(sub::commands())
 }
 
-fn exec_sub(cfg: &mut Config, cmd: &str, args: &ArgMatches) {
-    if let Some(proc) = sub::find_proc(cmd) {
-        return proc(cfg, args);
+fn exec_sub(cfg: &mut Config, cmd: &str, args: &ArgMatches) -> CliRes {
+    match sub::find_proc(cmd) {
+        Some(proc) => return proc(cfg, args),
+        None => bail!("unknown subcommand `{cmd}`"),
     }
 }
