@@ -4,9 +4,9 @@ pub fn build() -> Cli {
     cmd("config")
         .about("configure chron")
         .args(&[
-            arg!(--editor <EDITOR_BIN> "set default editor"),
-            arg!(--date <DATE_FORMAT> "set date format"),
-            arg!(--time <TIME_FORMAT> "set time format"),
+            arg!(--editor <EDITOR_BIN> "set default editor").required(false),
+            arg!(--date <DATE_FORMAT> "set date format").required(false),
+            arg!(--time <TIME_FORMAT> "set time format").required(false),
         ])
 }
 
