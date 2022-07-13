@@ -10,7 +10,7 @@ use std::path::Path;
 // TODO --prepend / --append
 pub fn build() -> Cli {
     cmd("ink")
-        .about("ink onto chronicle")
+        .about("Ink draft onto chronicle")
         .arg(Arg::new("name").required(true))
 }
 

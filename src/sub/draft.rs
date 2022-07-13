@@ -4,7 +4,7 @@ use chrono::Local;
 
 pub fn build() -> Cli {
     cmd("draft")
-        .about("draft chronicle before inking")
+        .about("Draft chronicle")
         .arg(Arg::new("name").required(true))
         .arg(Arg::new("event").required(true))
 }

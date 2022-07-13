@@ -2,7 +2,7 @@ use pre::*;
 
 pub fn build() -> Cli {
     cmd("new")
-        .about("create new chronicle")
+        .about("Create new chronicle")
         .arg(Arg::new("name").required(true))
         .arg(Arg::new("storage").required(true))
 }

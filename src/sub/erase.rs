@@ -5,7 +5,7 @@ use std::io;
 
 pub fn build() -> Cli {
     cmd("erase")
-        .about("wipe off draft buffer")
+        .about("Wipe off draft buffer")
         .arg(Arg::new("name").required(true))
 }
 

@@ -20,6 +20,7 @@ fn build() -> Cli {
     Command::new("chron")
         .version(clap::crate_version!())
         .setting(AppSettings::DeriveDisplayOrder)
+        .override_usage("chron [SUBCOMMAND] [CHRON_NAME]")
         .subcommands(sub::commands())
 }
 

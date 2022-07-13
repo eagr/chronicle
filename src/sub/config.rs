@@ -2,7 +2,7 @@ use pre::*;
 
 pub fn build() -> Cli {
     cmd("config")
-        .about("configure chron")
+        .about("Configure chron")
         .args(&[
             arg!(--editor <EDITOR_BIN> "set default editor").required(false),
             arg!(--date <DATE_FORMAT> "set date format").required(false),

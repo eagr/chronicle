@@ -2,7 +2,7 @@ use pre::*;
 
 pub fn build() -> Cli {
     cmd("reword")
-        .about("reword draft")
+        .about("Reword draft")
         .arg(Arg::new("name").required(true))
 }
 
