@@ -1,6 +1,7 @@
 use pre::*;
 
 use anyhow::{Result};
+use chrono::{Local, TimeZone};
 
 use std::collections::BTreeMap;
 use std::fs::File;
@@ -32,7 +33,11 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
 
     let chron_dir = dir();
     let draft_path = draft_path(name);
-    let map = parse(&draft_path)?;
+
+    let chron_cfg = cfg.chronicle.get(name).context(format!("could not get config of '{name}'"))?;
+    let date_fmt = if chron_cfg.date.is_empty() { cfg.date.to_string() } else { chron_cfg.date.to_string() };
+    let time_fmt = if chron_cfg.time.is_empty() { cfg.time.to_string() } else { chron_cfg.time.to_string() };
+    let map = parse(&draft_path, &date_fmt, &time_fmt)?;
 
     let mut new_ink = String::new();
     for (date, events) in &map {
@@ -62,21 +67,26 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
     Ok(())
 }
 
-fn parse<P>(path: P) -> Result<BTreeMap<String, Vec<String>>>
+fn parse<P>(path: P, date_fmt: &String, time_fmt: &String) -> Result<BTreeMap<String, Vec<String>>>
 where P: AsRef<Path>,
 {
     let lines = read_lines(&path)?;
-    let mut map: BTreeMap<String, Vec<String>> = BTreeMap::new();
 
+    let mut map: BTreeMap<String, Vec<String>> = BTreeMap::new();
     for line in lines {
         if let Ok(ln) = line {
-            let (date, event) = ln.split_once(' ').context("failed to split line")?;
-            let event = event.to_string();
+            let (timestamp, event) = ln.split_once(' ').context("failed to split line")?;
 
-            if let Some(events) = map.get_mut(date) {
+            let timestamp = timestamp.parse::<i64>()?;
+            let dt = Local.timestamp(timestamp, 0);
+            let date = dt.format(date_fmt).to_string();
+            let time = dt.format(time_fmt).to_string();
+            let event = time + " " + event;
+
+            if let Some(events) = map.get_mut(&date) {
                 events.push(event);
             } else {
-                map.insert(date.to_string(), vec![event]);
+                map.insert(date, vec![event]);
             }
         }
     }

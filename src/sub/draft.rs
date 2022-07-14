@@ -19,12 +19,8 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
 
     let path = draft_path(name);
 
-    let chron_cfg = cfg.chronicle.get(name).context(format!("could not get configuration of '{name}'"))?;
-    let date_fmt = if chron_cfg.date.is_empty() { cfg.date.to_string() } else { chron_cfg.date.to_string() };
-    let time_fmt = if chron_cfg.time.is_empty() { cfg.time.to_string() } else { chron_cfg.time.to_string() };
-    let dt_fmt = format!("{date_fmt} {time_fmt}");
-    let now = Local::now().format(&dt_fmt).to_string();
-    let line = now + " " + &event;
+    let timestamp = Local::now().timestamp();
+    let line = timestamp.to_string() + " " + event;
 
     append(&path, &line)
 }
