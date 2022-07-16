@@ -26,7 +26,7 @@ fn build() -> Cli {
 
 fn exec_sub(cfg: &mut Config, cmd: &str, args: &ArgMatches) -> CliRes {
     match sub::find_proc(cmd) {
-        Some(proc) => return proc(cfg, args),
+        Some(proc) => proc(cfg, args),
         None => bail!("unknown subcommand `{cmd}`"),
     }
 }

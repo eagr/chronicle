@@ -34,11 +34,11 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
     let draft_path = draft_path(name);
 
     let chron_cfg = cfg.chronicle.get(name).context(format!("could not get config of '{name}'"))?;
-    let is_rev = if let Some(reverse) = &chron_cfg.reverse { *reverse } else { *(&cfg.reverse) };
+    let is_rev = if let Some(reverse) = &chron_cfg.reverse { *reverse } else { cfg.reverse };
     let date_fmt = if let Some(date) = &chron_cfg.date { date } else { &cfg.date };
     let time_fmt = if let Some(time) = &chron_cfg.time { time } else { &cfg.time };
 
-    let map = parse(&draft_path, &date_fmt, &time_fmt)?;
+    let map = parse(&draft_path, date_fmt, time_fmt)?;
     let mut new_ink = String::new();
     for (date, events) in &map {
         let mut day = String::new();
@@ -46,7 +46,7 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
         for ev in events {
             day.push_str(&format!("- {ev}\n"));
         }
-        day.push_str("\n");
+        day.push('\n');
 
         if is_rev {
             new_ink = day + &new_ink;
@@ -62,7 +62,7 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
         // 2. append entire store state to tmp file
         // 3. rename tmp file to the same name as store file
         let mut tmp = tempfile::NamedTempFile::new_in(chron_dir)?;
-        tmp.write(new_ink.as_bytes())?;
+        tmp.write_all(new_ink.as_bytes())?;
         let mut store = File::open(store_path)?;
         io::copy(&mut store, &mut tmp)?;
         tmp.persist(store_path)?;
@@ -84,25 +84,23 @@ where P: AsRef<Path>,
     let lines = read_lines(&path)?;
 
     let mut map: BTreeMap<String, Vec<String>> = BTreeMap::new();
-    for line in lines {
-        if let Ok(ln) = line {
-            let (timestamp, event) = ln.split_once(' ').context("failed to split line")?;
+    for ln in lines.flatten() {
+        let (timestamp, event) = ln.split_once(' ').context("failed to split line")?;
 
-            let timestamp = timestamp.parse::<i64>()?;
-            let dt = Local.timestamp(timestamp, 0);
-            let date = dt.format(date_fmt).to_string();
-            let time = dt.format(time_fmt).to_string();
-            let event = time + " " + event;
+        let timestamp = timestamp.parse::<i64>()?;
+        let dt = Local.timestamp(timestamp, 0);
+        let date = dt.format(date_fmt).to_string();
+        let time = dt.format(time_fmt).to_string();
+        let event = time + " " + event;
 
-            if let Some(events) = map.get_mut(&date) {
-                events.push(event);
-            } else {
-                map.insert(date, vec![event]);
-            }
+        if let Some(events) = map.get_mut(&date) {
+            events.push(event);
+        } else {
+            map.insert(date, vec![event]);
         }
     }
 
-    for (_, events) in &mut map {
+    for events in map.values_mut() {
         events.sort();
     }
 

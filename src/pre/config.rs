@@ -49,7 +49,7 @@ impl Config {
         }
     }
 
-    pub fn exists(self: &Self, name: &str) -> bool {
+    pub fn exists(&self, name: &str) -> bool {
         self.chronicle.contains_key(name)
     }
 }
@@ -89,7 +89,6 @@ pub fn read_config() -> Result<Config> {
             io::ErrorKind::NotFound => {
                 init_config().and_then(|()| {
                     File::open(&p)
-                        .map(|f| f)
                         .map_err(|e| e.into())
                 })
             },
@@ -106,7 +105,6 @@ pub fn read_config() -> Result<Config> {
     f.read_to_string(&mut s)?;
 
     toml::from_str(&s)
-        .map(|c| c)
         .map_err(|e| e.into())
 }
 
