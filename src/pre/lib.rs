@@ -27,13 +27,13 @@ pub fn try_get_arg<'a>(args: &'a ArgMatches, name: &str) -> anyhow::Result<&'a S
         .ok_or_else(|| anyhow!("could not get arg `{name}`"))
 }
 
-pub fn append(path: &PathBuf, line: &String) -> CliRes {
+pub fn append(path: &PathBuf, line: &str) -> CliRes {
     let mut fd = OpenOptions::new()
         .create(true)
         .append(true)
         .open(path)?;
 
-    let ln = line.to_owned() + "\n";
+    let ln = line.to_string() + "\n";
     fd.write_all(ln.as_bytes())?;
     Ok(())
 }

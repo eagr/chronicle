@@ -6,61 +6,50 @@ use std::fs::{self, File};
 use std::io::{self, Read, Write};
 use std::path::PathBuf;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct ChronicleConfig {
-    #[serde(default)]
-    pub storage: String,
-
-    #[serde(default)]
-    pub date: String,
-
-    #[serde(default)]
-    pub time: String,
+    pub store: String,
+    pub reverse: Option<bool>,
+    pub date: Option<String>,
+    pub time: Option<String>,
 }
 
 impl ChronicleConfig {
-    pub fn new(storage: &String) -> Self {
+    pub fn new(store: &str) -> Self {
         Self {
-            storage: storage.to_owned(),
-            date: String::new(),
-            time: String::new(),
+            store: store.to_string(),
+            ..Default::default()
         }
     }
 }
 
-fn def_date() -> String { String::from("%Y-%m-%d") }
+fn reverse_default() -> bool { true }
+fn date_default() -> String { String::from("%Y-%m-%d") }
+fn time_default() -> String { String::from("%H:%M") }
 
-fn def_time() -> String { String::from("%H:%M") }
-
-#[derive(Serialize, Deserialize)]
+#[derive(Default, Serialize, Deserialize)]
 pub struct Config {
-    #[serde(default)]
-    pub default: String,
-
-    #[serde(default = "def_date")]
-    pub date: String,
-
-    #[serde(default = "def_time")]
-    pub time: String,
-
-    #[serde(default)]
     pub editor: String,
-
+    #[serde(default = "reverse_default")]
+    pub reverse: bool,
+    #[serde(default = "date_default")]
+    pub date: String,
+    #[serde(default = "time_default")]
+    pub time: String,
     pub chronicle: HashMap<String, ChronicleConfig>,
 }
 
 impl Config {
     pub fn new() -> Self {
         Self {
-            default: String::new(),
-            date: def_date(),
-            time: def_time(),
-            editor: String::new(),
-            chronicle: HashMap::new(),
+            reverse: reverse_default(),
+            date: date_default(),
+            time: time_default(),
+            ..Default::default()
         }
     }
 
-    pub fn exists(self: &Self, name: &String) -> bool {
+    pub fn exists(self: &Self, name: &str) -> bool {
         self.chronicle.contains_key(name)
     }
 }
@@ -77,7 +66,7 @@ pub fn config_path() -> PathBuf {
     dir().join("config.toml")
 }
 
-pub fn draft_path(name: &String) -> PathBuf {
+pub fn draft_path(name: &str) -> PathBuf {
     dir().join(name)
 }
 
