@@ -9,9 +9,8 @@ pub fn build() -> Cli {
 pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
     let name = try_get_arg(args, "name")?;
 
-    // TODO msg: `chron config --editor <EDITOR_BIN>`
     if cfg.editor.is_empty() {
-        bail!("editor not set");
+        bail!("Set the editor with `chron config --editor <EDITOR_BIN>` and try again.");
     }
 
     if !cfg.exists(name) {
