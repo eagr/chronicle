@@ -4,8 +4,9 @@ use anyhow::{Result};
 use chrono::{Local, TimeZone};
 
 use std::collections::BTreeMap;
+use std::fmt::{Write as _};
 use std::fs::{File, OpenOptions};
-use std::io::{self, BufRead, BufReader, Lines, Write};
+use std::io::{self, BufReader, Lines, BufRead as _, Write as _};
 use std::path::Path;
 
 pub fn build() -> Cli {
@@ -42,9 +43,10 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
     let mut new_ink = String::new();
     for (date, events) in &map {
         let mut day = String::new();
-        day.push_str(&format!("## {date}\n\n"));
+        write!(day, "## {date}\n\n")?;
+
         for ev in events {
-            day.push_str(&format!("- {ev}\n"));
+            writeln!(day, "- {ev}")?;
         }
         day.push('\n');
 
