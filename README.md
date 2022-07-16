@@ -54,7 +54,7 @@ chron erase code
 You can also configure Chronicle by modifying the config file, which defaults to
 
 * on Unix: $HOME/.chronicle/config.toml
-* on Windows: %USERPROFILE%\.chronicle\config.toml
+* on Windows: %USERPROFILE%\\.chronicle\config.toml
 
 ```toml
 # ===== global configuration =====
@@ -87,7 +87,7 @@ store = "/Users/eagr/logs/code.md"
 
 # options below will inherit from their global counterpart
 # if you leave them out
-reverse = ... # true or false
+reverse = true  # or false
 date = "..."
 time = "..."
 ```
