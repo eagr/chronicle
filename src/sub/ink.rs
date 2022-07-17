@@ -22,12 +22,12 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
         bail!("no chronicle named '{name}'");
     }
 
-    let store_path = &cfg.chronicle
+    let store_paths = &cfg.chronicle
         .get(name)
         .context(format!("failed to read config of '{name}'"))?
-        .store;
+        .stores;
 
-    if store_path.is_empty() {
+    if store_paths.is_empty() {
         bail!("'{name}' store not set");
     }
 
@@ -57,22 +57,27 @@ pub fn proc(cfg: &mut Config, args: &ArgMatches) -> CliRes {
         }
     }
 
+    let bytes = new_ink.as_bytes();
     if is_rev {
         // steps to prepend new ink
-        // 0. create tmp file in the same dir as store file
+        // 0. create tmp file in the .chronicle dir
         // 1. write new content to tmp file
         // 2. append entire store state to tmp file
         // 3. rename tmp file to the same name as store file
-        let mut tmp = tempfile::NamedTempFile::new_in(chron_dir)?;
-        tmp.write_all(new_ink.as_bytes())?;
-        let mut store = File::open(store_path)?;
-        io::copy(&mut store, &mut tmp)?;
-        tmp.persist(store_path)?;
+        for path in store_paths {
+            let mut tmp = tempfile::NamedTempFile::new_in(&chron_dir)?;
+            tmp.write_all(bytes)?;
+            let mut store = File::open(path)?;
+            io::copy(&mut store, &mut tmp)?;
+            tmp.persist(path)?;
+        }
     } else {
-        let mut store = OpenOptions::new()
-            .append(true)
-            .open(store_path)?;
-        store.write_all(new_ink.as_bytes())?;
+        let mut oo = OpenOptions::new();
+        let oo = oo.append(true);
+        for path in store_paths {
+            let mut store = oo.open(path)?;
+            store.write_all(bytes)?;
+        }
     }
 
     // wife off draft

@@ -8,7 +8,7 @@ use std::path::PathBuf;
 
 #[derive(Default, Serialize, Deserialize)]
 pub struct ChronicleConfig {
-    pub store: String,
+    pub stores: Vec<String>,
     pub reverse: Option<bool>,
     pub date: Option<String>,
     pub time: Option<String>,
@@ -17,7 +17,7 @@ pub struct ChronicleConfig {
 impl ChronicleConfig {
     pub fn new(store: &str) -> Self {
         Self {
-            store: store.to_string(),
+            stores: vec![store.to_string()],
             ..Default::default()
         }
     }
