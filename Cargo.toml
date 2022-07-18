@@ -1,14 +1,19 @@
 [package]
 name = "chronicle"
-version = "0.0.0"
+version = "0.1.0"
 edition = "2021"
 authors = ["Julian Eager <eagr@tutanota.com>"]
-description = "CLI tool for logging timestamped events"
+description = "write your chronicle from command line"
 license = "MIT OR Apache-2.0"
 categories = ["command-line-utilities"]
-keywords = ["cli", "logging", "timestamped"]
+keywords = ["logging", "timestamped", "event"]
 readme = "README.md"
 repository = "https://github.com/eagr/chronicle"
+include = [
+    "src/**/*",
+    "README.md",
+    "LICENSE-*",
+]
 
 [lib]
 name = "pre"
